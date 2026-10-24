@@ -1,4 +1,4 @@
-# Installation du convertisseur vidéo sous Windows.
+﻿# Installation du convertisseur vidéo sous Windows.
 # Installe FFmpeg et uv avec winget si besoin, puis les dépendances Python.
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
