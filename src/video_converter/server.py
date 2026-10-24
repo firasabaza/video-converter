@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import atexit
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -45,6 +47,7 @@ def create_app(caps: Capabilities, output_dir: Path) -> FastAPI:
     app = FastAPI(title="Convertisseur vidéo")
     jobs = JobQueue(caps, output_dir)
     upload_dir = Path(tempfile.mkdtemp(prefix="video-converter-"))
+    atexit.register(shutil.rmtree, upload_dir, ignore_errors=True)
     version = ffmpeg_version()
 
     @app.get("/", response_class=HTMLResponse)
