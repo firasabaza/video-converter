@@ -46,6 +46,7 @@ def open_folder(path: Path) -> None:
 def create_app(caps: Capabilities, output_dir: Path) -> FastAPI:
     app = FastAPI(title="Convertisseur vidéo")
     jobs = JobQueue(caps, output_dir)
+    app.state.jobs = jobs
     upload_dir = Path(tempfile.mkdtemp(prefix="video-converter-"))
     atexit.register(shutil.rmtree, upload_dir, ignore_errors=True)
     version = ffmpeg_version()

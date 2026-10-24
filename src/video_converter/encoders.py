@@ -8,6 +8,7 @@ utilise l'encodage CPU (libx264, libx265, SVT-AV1, libvpx-vp9).
 
 from __future__ import annotations
 
+import functools
 import glob
 import os
 import platform
@@ -16,6 +17,7 @@ import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+from pathlib import Path
 
 QUALITIES = {
     "high": "Haute qualité",
@@ -82,8 +84,34 @@ AUDIO_BITRATES = {
 }
 
 
+# Emplacements où FFmpeg est souvent installé mais absent du PATH, par exemple
+# quand l'app macOS est lancée depuis le Finder.
+EXTRA_DIRS = ["/opt/homebrew/bin", "/usr/local/bin"]
+
+
+@functools.lru_cache(maxsize=None)
+def _bundled(name: str) -> str | None:
+    """FFmpeg intégré à l'app macOS (.app), s'il fonctionne sur ce système."""
+    if not getattr(sys, "frozen", False):
+        return None
+    path = Path(sys.executable).resolve().parent.parent / "Resources" / "ffmpeg" / "bin" / name
+    try:
+        ok = path.exists() and subprocess.run([str(path), "-version"], capture_output=True, timeout=15).returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        ok = False
+    return str(path) if ok else None
+
+
+def _find(name: str, env: str) -> str | None:
+    exe = name + (".exe" if sys.platform == "win32" else "")
+    found = os.environ.get(env) or _bundled(exe) or shutil.which(exe)
+    if not found:
+        found = next((os.path.join(d, exe) for d in EXTRA_DIRS if os.access(os.path.join(d, exe), os.X_OK)), None)
+    return found
+
+
 def ffmpeg_path() -> str:
-    path = os.environ.get("VC_FFMPEG") or shutil.which("ffmpeg")
+    path = _find("ffmpeg", "VC_FFMPEG")
     if not path:
         raise FileNotFoundError(
             "FFmpeg est introuvable. Installez-le (voir le README) ou indiquez "
@@ -93,7 +121,7 @@ def ffmpeg_path() -> str:
 
 
 def ffprobe_path() -> str:
-    path = os.environ.get("VC_FFPROBE") or shutil.which("ffprobe")
+    path = _find("ffprobe", "VC_FFPROBE")
     if not path:
         sibling = os.path.join(os.path.dirname(ffmpeg_path()), "ffprobe" + (".exe" if sys.platform == "win32" else ""))
         if os.path.exists(sibling):

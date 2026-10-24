@@ -26,7 +26,27 @@ Si aucun encodeur matériel n'est disponible pour le codec choisi, l'application
 
 Le format WebM utilise toujours VP9 ou AV1 ; AVI utilise MPEG-4 (Xvid) par défaut pour rester lisible par les anciens lecteurs, ou H.264.
 
-## Installation
+## App macOS (.dmg)
+
+Pour un Mac Apple Silicon, le plus simple est l'image disque : elle contient l'app avec Python **et FFmpeg intégrés**, donc rien d'autre à installer.
+
+1. Téléchargez `Video-Converter-<version>-macOS-arm64.dmg` dans les [Releases](../../releases) du dépôt.
+2. Ouvrez le `.dmg` et glissez **Video Converter** dans **Applications**.
+3. Premier lancement : l'app n'est pas signée par un développeur Apple, macOS la bloque donc une fois. Ouvrez **Réglages Système → Confidentialité et sécurité**, puis cliquez sur **Ouvrir quand même** en bas de la page.
+
+L'app s'installe dans la **barre des menus** (icône pellicule) et ouvre l'interface dans votre navigateur. Le menu de l'icône permet de rouvrir l'interface, d'ouvrir le dossier des vidéos converties et de **quitter** (ce qui arrête aussi les conversions en cours). Le journal est dans `~/Library/Logs/Video Converter.log`.
+
+Le FFmpeg intégré vient de Homebrew sur la machine qui a construit l'image : il demande la même version de macOS ou plus récente (macOS 27 pour la version publiée). Sur un macOS plus ancien, l'app utilise le FFmpeg de Homebrew s'il est installé (`brew install ffmpeg`).
+
+### Construire le .dmg
+
+```bash
+./packaging/macos/build_dmg.sh
+```
+
+Le script dessine l'icône, assemble l'app avec PyInstaller, y copie ffmpeg/ffprobe et leurs bibliothèques Homebrew, signe l'ensemble en ad hoc et crée `dist/Video-Converter-<version>-macOS-<arch>.dmg`. Il faut Homebrew avec `ffmpeg`, uv et les outils Xcode en ligne de commande.
+
+## Installation depuis les sources
 
 Il faut **FFmpeg** et **[uv](https://docs.astral.sh/uv/)** (qui installe Python 3.10+ et les dépendances tout seul). Les scripts ci-dessous installent ce qui manque.
 
@@ -131,8 +151,10 @@ src/video_converter/
   server.py      API web locale (FastAPI)
   static/        interface (une seule page HTML)
   __main__.py    ligne de commande
+  macapp.py      app macOS (icône dans la barre des menus)
+packaging/macos/ construction du .app et du .dmg
 ```
 
 ## Licence
 
-MIT. FFmpeg est distribué séparément sous sa propre licence (LGPL/GPL).
+MIT. FFmpeg est distribué sous sa propre licence : la version intégrée au .dmg (Homebrew, avec x264 et x265) est sous GPL ; ses sources sont sur https://ffmpeg.org.

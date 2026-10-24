@@ -269,6 +269,10 @@ class JobQueue:
                 job.message = "Conversion annulée."
         return job
 
+    def cancel_all(self) -> None:
+        for job_id in list(self.jobs):
+            self.cancel(job_id)
+
     def clear_finished(self) -> None:
         for job_id in [j.id for j in self.jobs.values() if j.status in ("done", "error", "cancelled")]:
             del self.jobs[job_id]
