@@ -107,9 +107,10 @@ class Cancelled(Exception):
 
 def run_ffmpeg(cmd: list[str], duration: float, on_progress: Callable[[float, float], None], cancel: threading.Event) -> None:
     """Lance FFmpeg et appelle on_progress(fraction, vitesse) au fil de l'eau."""
-    with tempfile.TemporaryFile(mode="w+") as errfile:
+    with tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as errfile:
         creationflags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=errfile, text=True, creationflags=creationflags)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=errfile, text=True, encoding="utf-8",
+                                errors="replace", creationflags=creationflags)
         speed = 0.0
         assert proc.stdout is not None
         for line in proc.stdout:
